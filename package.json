@@ -1,0 +1,17 @@
+{
+    "name": "attendance_system",
+    "version": "1.0.0",
+    "description": "",
+    "license": "ISC",
+    "author": "",
+    "type": "commonjs",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "start": "concurrently \"cd attendance-system-frontend && npm run dev\" \"cd attendance_systems && npm start\""
+    },
+    "dependencies": {
+      "concurrently": "^9.1.2"
+    }
+  }
+  
