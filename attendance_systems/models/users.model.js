@@ -40,9 +40,10 @@ async function getIdentity(id) {
 
     if (data.length === 0) {
       return {
-        statusCode: 404,
+        statusCode: 204,
         success: false,
         message: "User not found.",
+        user: data[0]
       };
     }
 
@@ -70,7 +71,10 @@ async function getIdentityByNFC(id) {
     console.log("LOG NEW:", freshIdentity, "Type:", typeof freshIdentity);
 
     const fetchIdentityNFC = `
-      SELECT u.*, s.section_name, s.grade_level, s.strand
+      SELECT u.user_id, u.nfc_id, u.section_id, u.username, 
+             u.fname, u.mname, u.lname, u.stud_status, u.card_status, 
+             s.section_name, s.grade_level, s.strand, 
+             u.guardianEmail, u.guardian
       FROM users_data u
       LEFT JOIN section s ON u.section_id = s.id
       WHERE u.nfc_id = ?`;
@@ -87,26 +91,66 @@ async function getIdentityByNFC(id) {
 
     console.log("Full User Data from NFC Scan:", nfcData[0]);
 
-    const userId = nfcData[0].user_id;
-    const guardianEmail = nfcData[0].guardianEmail;
-    const studentName = `${nfcData[0].fname} ${nfcData[0].lname}`;
-    const guardianName = nfcData[0].guardian;
-    const currentTime = generateTimestamp();
+    const user = {
+      user_id: nfcData[0].user_id,
+      nfc_id: nfcData[0].nfc_id,
+      section_id: nfcData[0].section_id,
+      username: nfcData[0].username,
+      name: `${nfcData[0].fname}${nfcData[0].mname ? nfcData[0].mname : ""}`,
+      lname: nfcData[0].lname,
+      fname: nfcData[0].fname,
+      mname: nfcData[0].mname,
+      stud_status: nfcData[0].stud_status,
+      card_status: nfcData[0].card_status,
+      section_name: nfcData[0].section_name,
+      grade_level: nfcData[0].grade_level,
+      strand: nfcData[0].strand,
+    };
 
+    const userId = user.user_id;
+    const guardianEmail = nfcData[0].guardianEmail;
+    const guardianName = nfcData[0].guardian;
+    const currentTime = new Date();
+    const formatDateForMySQL = (date) => {
+      const pad = (num) => (num < 10 ? "0" + num : num);
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+             `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+    
+    const currentTimestamp = formatDateForMySQL(new Date());
+    
 
     const checkExistingAttendanceSQL = `
-      SELECT check_in, check_out 
-      FROM attendance 
-      WHERE user_id = ? 
-      ORDER BY check_in DESC 
-      LIMIT 1`;
+    SELECT 
+      DATE_FORMAT(check_in, '%Y-%m-%d %H:%i:%s') AS check_in, 
+      DATE_FORMAT(check_out, '%Y-%m-%d %H:%i:%s') AS check_out
+    FROM attendance 
+    WHERE user_id = ? 
+    ORDER BY check_in DESC 
+    LIMIT 1`;
+
 
     const [existingAttendance] = await database.query(checkExistingAttendanceSQL, [userId]);
 
     if (existingAttendance.length > 0) {
       const lastAttendance = existingAttendance[0];
+      const lastCheckInTime = new Date(lastAttendance.check_in);
+      const timeDifference = (currentTime - lastCheckInTime) / 1000;
 
       if (!lastAttendance.check_out) {
+        if (timeDifference < 10) {
+          return {
+            statusCode: 200,
+            success: true,
+            message: "YOU'RE STILL IN.",
+            user: { 
+              ...user, 
+              check_in: lastAttendance.check_in, 
+              check_out: null 
+            },
+          };
+        }
+
         const updateAttendanceSQL = `
           UPDATE attendance 
           SET check_out = ? 
@@ -115,23 +159,23 @@ async function getIdentityByNFC(id) {
           ORDER BY check_in DESC 
           LIMIT 1`;
 
-        await database.query(updateAttendanceSQL, [currentTime, userId]);
+        await database.query(updateAttendanceSQL, [currentTimestamp, userId]);
 
         const checkoutMessage = `
           <p>Dear Mr/Ms. ${guardianName},</p>
-          <p>Your child, <strong>${studentName}</strong>, has <strong>left school</strong> on <strong>${currentTime}</strong>.</p>
+          <p>Your child, <strong>${user.fname} ${user.lname}</strong>, has <strong>left school</strong> on <strong>${currentTimestamp}</strong>.</p>
           <p>Best regards,<br>School Attendance System</p>`;
 
-        sendMail(guardianEmail, `Exit Notification for ${studentName}`, checkoutMessage);
+        sendMail(guardianEmail, `Exit Notification for ${user.fname} ${user.lname}`, checkoutMessage);
 
         return {
           statusCode: 200,
           success: true,
           message: "GOODBYE, THANK YOU.",
           user: { 
-            ...nfcData[0], 
+            ...user, 
             check_in: lastAttendance.check_in, 
-            check_out: currentTime 
+            check_out: currentTimestamp 
           },
         };
       }
@@ -141,22 +185,22 @@ async function getIdentityByNFC(id) {
       INSERT INTO attendance (user_id, check_in)
       VALUES (?, ?)`;
 
-    await database.query(insertAttendanceSQL, [userId, currentTime]);
+    await database.query(insertAttendanceSQL, [userId, currentTimestamp]);
 
     const checkinMessage = `
       <p>Dear Mr/Ms. ${guardianName},</p>
-      <p>Your child, <strong>${studentName}</strong>, has <strong>checked in</strong> to school on <strong>${currentTime}</strong>.</p>
+      <p>Your child, <strong>${user.fname} ${user.lname}</strong>, has <strong>checked in</strong> to school on <strong>${currentTimestamp}</strong>.</p>
       <p>Best regards,<br>School Attendance System</p>`;
 
-    sendMail(guardianEmail, `Attendance Notification for ${studentName}`, checkinMessage);
+    sendMail(guardianEmail, `Attendance Notification for ${user.fname} ${user.lname}`, checkinMessage);
 
     return {
       statusCode: 200,
       success: true,
       message: "YOU'RE IN.",
       user: { 
-        ...nfcData[0], 
-        check_in: currentTime, 
+        ...user, 
+        check_in: currentTimestamp, 
         check_out: null 
       },
     };
@@ -169,6 +213,7 @@ async function getIdentityByNFC(id) {
     };
   }
 }
+
 
 module.exports = {
   getIdentity,
