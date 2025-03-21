@@ -6,7 +6,7 @@ import axios from "axios";
 export default function HomePage() {
   const [student, setStudent] = useState({
     student_id: "",
-    stud_pic: "/user/user.svg",
+    stud_pic: "",
     lname: "",
     fname: "",
     mname: "",
@@ -53,7 +53,7 @@ export default function HomePage() {
         setErrorMessage("ID NOT ENROLL");
         setStudent({
           student_id: "",
-          stud_pic: "/user/user.svg",
+          stud_pic: "",
           lname: "",
           fname: "",
           mname: "",
@@ -73,7 +73,7 @@ export default function HomePage() {
       const user = res.data.user;
       setErrorMessage("");
       setStudent({
-        stud_pic: "/user/user.svg",
+        stud_pic: "/user/user.svg", // Image only appears for valid IDs
         student_id: user.username,
         lname: user.lname,
         fname: user.fname,
@@ -90,13 +90,14 @@ export default function HomePage() {
   
       setNfc("");
     } catch (err) {
-      console.error("Error fetching NFC data:", err);
+      console.error("❌ Error fetching NFC data:", err);
       setErrorMessage("Error processing request.");
       setStudent((prev) => ({
         ...prev,
         message: "Error processing request.",
         check_in: null,
         check_out: null,
+        stud_pic: "", // Hide image if an error occurs
       }));
   
       setNfc("");
@@ -122,7 +123,7 @@ export default function HomePage() {
           </div>
           <div className="h-[85%] w-full flex flex-row">
             <div className="h-full w-[40%] flex flex-col items-center justify-center p-6 gap-y-4">
-              <img src={student.stud_pic} alt="user" className="bg-white w-[80%] h-[80%]" />
+              {student.stud_pic && <img src={student.stud_pic} alt="user" className="bg-white w-[80%] h-[80%]" />} 
             </div>
             <div className="h-full w-[60%] text-[50px] flex flex-col gap-y-8 justify-center items-start uppercase">
               <form onSubmit={handleSubmit}>
