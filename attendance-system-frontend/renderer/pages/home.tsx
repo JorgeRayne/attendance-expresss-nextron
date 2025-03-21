@@ -73,7 +73,7 @@ export default function HomePage() {
       const user = res.data.user;
       setErrorMessage("");
       setStudent({
-        stud_pic: "/user/user.svg", // Image only appears for valid IDs
+        stud_pic: "/user/user.svg",
         student_id: user.username,
         lname: user.lname,
         fname: user.fname,
@@ -97,7 +97,7 @@ export default function HomePage() {
         message: "Error processing request.",
         check_in: null,
         check_out: null,
-        stud_pic: "", // Hide image if an error occurs
+        stud_pic: "",
       }));
   
       setNfc("");

@@ -2,8 +2,7 @@ const users = require("../models/users.model");
 
 exports.getIdentification = async function (req, res) {
   const { id } = req.params;
-
-  // console.log(id);
+  
   const response = await users.getIdentity(id);
   return res.status(response.statusCode).json({
     statusCode: response.statusCode,

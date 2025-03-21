@@ -162,11 +162,19 @@ async function getIdentityByNFC(id) {
         await database.query(updateAttendanceSQL, [currentTimestamp, userId]);
 
         const checkoutMessage = `
-          <p>Dear Mr/Ms. ${guardianName},</p>
-          <p>Your child, <strong>${user.fname} ${user.lname}</strong>, has <strong>left school</strong> on <strong>${currentTimestamp}</strong>.</p>
-          <p>Best regards,<br>School Attendance System</p>`;
+          <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2 style="color: #0056b3;">CMI ADMINISTRATION</h2>
+          <p>Dear <strong>${guardianName}</strong>,</p>
+          
+          <div style="border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+              <p>I am writing to inform you that your child, ${user.fname} ${user.lname}, has exited the school premises today,${currentTimestamp}. Please let us know if you need any further details.</p>
+          </div>
+          <p style="color: #0056b3;"><strong>COLLEGE OF MARY IMMACULATE</strong></p>
+          <hr />
+          <p style="font-size: 12px; color: #666;">This is an automated email. Please do not reply.</p>
+        </div>`;
 
-        sendMail(guardianEmail, `Exit Notification for ${user.fname} ${user.lname}`, checkoutMessage);
+        sendMail(guardianEmail, ` Attendance Confirmation for ${user.fname} ${user.lname}`, checkoutMessage);
 
         return {
           statusCode: 200,
@@ -188,9 +196,17 @@ async function getIdentityByNFC(id) {
     await database.query(insertAttendanceSQL, [userId, currentTimestamp]);
 
     const checkinMessage = `
-      <p>Dear Mr/Ms. ${guardianName},</p>
-      <p>Your child, <strong>${user.fname} ${user.lname}</strong>, has <strong>checked in</strong> to school on <strong>${currentTimestamp}</strong>.</p>
-      <p>Best regards,<br>School Attendance System</p>`;
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2 style="color: #0056b3;">CMI ADMINISTRATION</h2>
+          <p>Dear <strong>${guardianName}</strong>,</p>
+          
+          <div style="border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+              <p>I hope this email finds you well. I am reaching out to confirm that your child, ${user.fname} ${user.lname}, is currently present at school today, ${currentTimestamp}. If you have any questions or need further information, please feel free to contact us.</p>
+          </div>
+          <p style="color: #0056b3;"><strong>COLLEGE OF MARY IMMACULATE</strong></p>
+          <hr />
+          <p style="font-size: 12px; color: #666;">This is an automated email. Please do not reply.</p>
+        </div>`;
 
     sendMail(guardianEmail, `Attendance Notification for ${user.fname} ${user.lname}`, checkinMessage);
 
