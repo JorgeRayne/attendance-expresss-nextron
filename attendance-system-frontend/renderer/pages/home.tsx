@@ -90,7 +90,7 @@ export default function HomePage() {
   
       setNfc("");
     } catch (err) {
-      console.error("❌ Error fetching NFC data:", err);
+      console.error("Error fetching NFC data:", err);
       setErrorMessage("Error processing request.");
       setStudent((prev) => ({
         ...prev,
@@ -135,7 +135,7 @@ export default function HomePage() {
                     name="nfc_id"
                     value={nfc_id}
                     onChange={(e) => setNfc(e.target.value)}
-                    className="opacity-100 absolute w-50"
+                    className="opacity-0 absolute w-0"
                   />
                 </div>
               </form>
