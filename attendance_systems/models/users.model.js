@@ -426,7 +426,7 @@ async function getIdentityByNFC(id) {
               check_out: currentTimestamp 
             },
           };
-        } else if (!isSameDate) {
+        } else if (!isSameDate) { 
           const insertAttendanceSQL = `
         INSERT INTO attendance (user_id, check_in)
         VALUES (?, ?)`;
@@ -451,7 +451,7 @@ async function getIdentityByNFC(id) {
       return {
             statusCode: 200,
             success: true,
-            message: "YOU DIDN'T CHECK OUT LAST DAY",
+            message: "YOU'RE IN",
             user: { 
               ...user, 
               check_in: lastAttendance.check_in, 

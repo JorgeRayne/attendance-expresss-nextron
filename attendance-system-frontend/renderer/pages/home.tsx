@@ -50,7 +50,7 @@ export default function HomePage() {
       console.log("API Response:", res.data);
   
       if (res.data.statusCode === 404) {
-        setErrorMessage("ID NOT ENROLL");
+        setErrorMessage("YOU'RE ALREADY IN");
         setStudent({
           student_id: "",
           stud_pic: "",
@@ -135,7 +135,7 @@ export default function HomePage() {
                     name="nfc_id"
                     value={nfc_id}
                     onChange={(e) => setNfc(e.target.value)}
-                    className="opacity-0 absolute w-0"
+                    className="opacity-100 absolute w-100"
                   />
                 </div>
               </form>
